@@ -126,3 +126,14 @@
 - [Assumption about scope boundaries, e.g., "Mobile support is out of scope for v1"]
 - [Assumption about data/environment, e.g., "Existing authentication system will be reused"]
 - [Dependency on existing system/service, e.g., "Requires access to the existing user profile API"]
+
+## Constitution Alignment *(mandatory)*
+
+- **Training-First Scope**: Explain how this feature remains suitable for local training use and
+  avoids production-only defaults.
+- **Security Boundaries**: Identify authentication, authorization, and data isolation impacts.
+- **Testable Story Independence**: Confirm each user story can be implemented and validated
+  independently.
+- **Offline-First and Abstractions**: Document any infrastructure dependency and the interface
+  abstraction used to keep implementations swappable.
+- **Simplicity and Maintainability**: Justify any added complexity or broad refactor.

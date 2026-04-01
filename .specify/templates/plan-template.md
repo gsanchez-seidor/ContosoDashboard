@@ -31,7 +31,12 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Training-first scope preserved; no production-only dependency is required for default execution.
+- Authentication/authorization and user-isolation impacts are identified and covered by acceptance
+  or verification tasks.
+- User stories remain independently implementable and testable.
+- Offline-first behavior is preserved, and new infrastructure integrations are interface-backed.
+- Complexity is justified; speculative abstractions and unrelated refactors are excluded.
 
 ## Project Structure
 
