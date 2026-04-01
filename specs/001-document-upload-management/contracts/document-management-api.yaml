@@ -1,0 +1,327 @@
+openapi: 3.0.3
+info:
+  title: ContosoDashboard Document Management API
+  version: 0.1.0
+  description: |
+    Contract for document upload and management operations used by the Blazor UI.
+servers:
+  - url: https://localhost:5001
+paths:
+  /api/documents:
+    get:
+      summary: List documents visible to current user
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+        - in: query
+          name: projectId
+          schema:
+            type: integer
+        - in: query
+          name: fromDateUtc
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: toDateUtc
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [title, uploadDate, category, fileSize]
+      responses:
+        '200':
+          description: Visible documents returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentSummary'
+        '401':
+          description: Not authenticated
+    post:
+      summary: Upload one document
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, title, category]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                title:
+                  type: string
+                category:
+                  type: string
+                description:
+                  type: string
+                projectId:
+                  type: integer
+                tags:
+                  type: string
+      responses:
+        '201':
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '400':
+          description: Validation failure
+        '401':
+          description: Not authenticated
+        '403':
+          description: Authenticated but not authorized for target project
+  /api/documents/search:
+    get:
+      summary: Search documents visible to current user
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Search results within caller authorization scope
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentSummary'
+  /api/documents/{documentId}:
+    get:
+      summary: Get document metadata
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '403':
+          description: Not authorized
+        '404':
+          description: Document not found or not visible
+    patch:
+      summary: Update document metadata
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDocumentRequest'
+      responses:
+        '200':
+          description: Metadata updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '409':
+          description: Version conflict warning required
+    delete:
+      summary: Soft-delete document
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Soft-deleted (30-day retention started)
+        '403':
+          description: Not authorized
+  /api/documents/{documentId}/download:
+    get:
+      summary: Download file content
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File stream
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Not authorized or blocked due to unverified state
+  /api/documents/{documentId}/preview:
+    get:
+      summary: Preview viewable file content
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Inline content for supported types
+        '403':
+          description: Not authorized or blocked due to unverified state
+  /api/documents/{documentId}/replace:
+    post:
+      summary: Replace document file content
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, expectedVersionToken]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                expectedVersionToken:
+                  type: string
+      responses:
+        '200':
+          description: File replaced
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentDetail'
+        '409':
+          description: Version conflict warning required
+  /api/documents/{documentId}/shares:
+    post:
+      summary: Share document with users
+      parameters:
+        - in: path
+          name: documentId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipientUserIds]
+              properties:
+                recipientUserIds:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: Shares created
+        '403':
+          description: Not authorized or invalid recipients for project-linked document
+
+components:
+  schemas:
+    DocumentSummary:
+      type: object
+      required:
+        - documentId
+        - title
+        - category
+        - fileSizeBytes
+        - createdDateUtc
+        - uploadedByDisplayName
+        - isUnverified
+      properties:
+        documentId:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        projectId:
+          type: integer
+          nullable: true
+        fileSizeBytes:
+          type: integer
+          format: int64
+        createdDateUtc:
+          type: string
+          format: date-time
+        uploadedByDisplayName:
+          type: string
+        isUnverified:
+          type: boolean
+
+    DocumentDetail:
+      allOf:
+        - $ref: '#/components/schemas/DocumentSummary'
+        - type: object
+          required:
+            - fileType
+            - description
+            - tags
+            - versionToken
+          properties:
+            description:
+              type: string
+              nullable: true
+            tags:
+              type: array
+              items:
+                type: string
+            fileType:
+              type: string
+            sharedWithUserIds:
+              type: array
+              items:
+                type: integer
+            versionToken:
+              type: string
+
+    UpdateDocumentRequest:
+      type: object
+      required:
+        - title
+        - category
+        - expectedVersionToken
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+        expectedVersionToken:
+          type: string
