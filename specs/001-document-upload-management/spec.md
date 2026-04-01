@@ -5,6 +5,16 @@
 **Status**: Draft  
 **Input**: User description: "StakeholderDocs/document-upload-and-management-feature.md"
 
+## Clarifications
+
+### Session 2026-04-01
+
+- Q: What should happen when malware scanning is unavailable, errors, or times out during upload? -> A: Allow upload immediately with warning and mark document as unverified.
+- Q: What retained data policy should apply after a user deletes a document? -> A: Soft delete for 30 days (not user-visible), then hard delete; audit trail retained.
+- Q: When a document is linked to a project, who should be valid recipients for direct sharing? -> A: Only users who already have access to that project (or admins) can be recipients.
+- Q: For unverified documents, what access policy applies before a successful scan? -> A: Upload succeeds, but unverified documents cannot be previewed or downloaded by anyone except admins.
+- Q: When two authorized users edit metadata or replace the same document nearly at the same time, how should conflicts be handled? -> A: Last write wins, but only with explicit version check and conflict warning before save.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -115,6 +125,9 @@ widget behavior, and document-related notification behavior.
 - A user attempts to download a document through a stale or copied link after permissions change.
 - Search terms match documents outside user permissions; unauthorized matches must not be exposed.
 - A user replaces a document while another authorized user is previewing it.
+- Malware scanning is unavailable, errors, or times out after file transfer starts.
+- A non-admin user tries to preview or download an unverified document before successful scan.
+- Two authorized users update metadata or replace the same document concurrently.
 
 ## Requirements *(mandatory)*
 
@@ -131,6 +144,11 @@ widget behavior, and document-related notification behavior.
   common image formats.
 - **FR-003**: System MUST reject unsupported file types and files exceeding the maximum allowed
   document size (25 MB) with clear user-facing error messages.
+- **FR-003a**: If malware scanning is unavailable, errors, or times out, System MUST allow upload
+  completion, mark the document as unverified, and display a warning that scan verification is
+  pending or unavailable.
+- **FR-003b**: While a document is unverified, System MUST block preview and download for all
+  non-admin users.
 - **FR-004**: System MUST require document title and category during upload and allow optional
   description, optional associated project, and optional tags.
 - **FR-005**: System MUST automatically capture upload timestamp, uploader identity, file size, and
@@ -154,9 +172,16 @@ widget behavior, and document-related notification behavior.
   category, tags).
 - **FR-016**: System MUST allow authorized users to replace a document file while preserving
   document identity and auditability.
+- **FR-016a**: For metadata updates and file replacement, System MUST perform explicit version
+  checks and warn users on conflicts; after confirmation, the most recent confirmed save becomes
+  the persisted state.
 - **FR-017**: System MUST allow document deletion only to users with valid permission and MUST
-  require explicit confirmation before permanent removal.
+  require explicit confirmation before soft deletion.
+- **FR-017a**: Soft-deleted documents MUST remain non-user-visible for 30 days, then be hard
+  deleted, while immutable audit trail records are retained.
 - **FR-018**: System MUST allow document owners to share documents with specific users or teams.
+- **FR-018a**: For project-linked documents, System MUST restrict direct-share recipients to users
+  already authorized for that project, except administrators.
 - **FR-019**: System MUST provide recipients a "Shared with me" view for documents shared with
   them.
 - **FR-020**: System MUST generate in-application notifications for document sharing and for new
