@@ -1,0 +1,82 @@
+@page "/shared-documents"
+@using ContosoDashboard.Services.Documents
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
+@inject IDocumentService DocumentService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Shared Documents - ContosoDashboard</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1>Shared Documents</h1>
+            <p class="text-muted mb-0">Documents shared directly with you.</p>
+        </div>
+    </div>
+
+    @if (documents == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else if (!documents.Any())
+    {
+        <div class="alert alert-info">No shared documents available.</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Category</th>
+                            <th>Uploader</th>
+                            <th>Uploaded</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in documents)
+                        {
+                            <tr>
+                                <td>@doc.Title</td>
+                                <td>@doc.Category</td>
+                                <td>@doc.UploadedByDisplayName</td>
+                                <td>@doc.CreatedDateUtc.ToLocalTime().ToString("MMM dd, yyyy HH:mm")</td>
+                                <td>
+                                    @if (doc.IsUnverified)
+                                    {
+                                        <span class="badge bg-warning text-dark">Unverified</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Verified</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<DocumentSummaryDto>? documents;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var claim = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(claim, out var userId) || userId <= 0)
+        {
+            documents = [];
+            return;
+        }
+
+        documents = await DocumentService.GetSharedDocumentsAsync(userId);
+    }
+}

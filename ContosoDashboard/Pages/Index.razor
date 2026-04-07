@@ -52,6 +52,14 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3 mb-3">
+                <div class="card summary-card">
+                    <div class="card-body">
+                        <h5 class="card-title">Visible Documents</h5>
+                        <p class="card-text display-4 text-primary">@summary.VisibleDocuments</p>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 
@@ -96,6 +104,31 @@
         </div>
 
         <div class="col-md-6">
+            <h3>Recent Documents</h3>
+            @if (recentDocuments != null && recentDocuments.Any())
+            {
+                <div class="list-group mb-4">
+                    @foreach (var doc in recentDocuments)
+                    {
+                        <a href="/documents" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@doc.Title</h6>
+                                <small>@GetRelativeTime(doc.CreatedDateUtc)</small>
+                            </div>
+                            <small class="text-muted">By @doc.UploadedByDisplayName</small>
+                            @if (doc.IsUnverified)
+                            {
+                                <span class="badge bg-warning text-dark ms-2">Unverified</span>
+                            }
+                        </a>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">No recent documents</p>
+            }
+
             <h3>Recent Notifications</h3>
             @if (recentNotifications != null && recentNotifications.Any())
             {
@@ -124,6 +157,7 @@
     private DashboardSummary? summary;
     private List<Announcement>? announcements;
     private List<Notification>? recentNotifications;
+    private List<DashboardDocumentItem>? recentDocuments;
     private string userName = "User";
     private int currentUserId = 0;
 
@@ -146,6 +180,7 @@
             summary = await DashboardService.GetDashboardSummaryAsync(currentUserId);
             announcements = await DashboardService.GetActiveAnnouncementsAsync();
             recentNotifications = await NotificationService.GetUserNotificationsAsync(currentUserId);
+            recentDocuments = await DashboardService.GetRecentDocumentsAsync(currentUserId);
         }
     }
 

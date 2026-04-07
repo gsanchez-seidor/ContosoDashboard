@@ -1,11 +1,14 @@
 @page "/tasks"
 @using ContosoDashboard.Services
+@using ContosoDashboard.Services.Documents
 @using ContosoDashboard.Models
 @using Microsoft.AspNetCore.Authorization
 @using System.Security.Claims
 @attribute [Authorize]
 @inject ITaskService TaskService
+@inject IDocumentService DocumentService
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
 
 <PageTitle>My Tasks - ContosoDashboard</PageTitle>
 
@@ -133,10 +136,47 @@
             </table>
         </div>
     }
+
+    @if (selectedTask != null)
+    {
+        <div class="card mt-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Task Documents: @selectedTask.Title</h5>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="/tasks/@selectedTask.TaskId">Task details</a>
+                    <a class="btn btn-sm btn-primary" href="/documents?taskId=@selectedTask.TaskId&projectId=@selectedTask.ProjectId">Upload from task context</a>
+                </div>
+            </div>
+            <div class="card-body">
+                @if (taskDocuments == null)
+                {
+                    <p class="text-muted mb-0">Loading linked documents...</p>
+                }
+                else if (!taskDocuments.Any())
+                {
+                    <p class="text-muted mb-0">No linked documents.</p>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var link in taskDocuments)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <span>@link.Title (@link.Category)</span>
+                                <span class="text-muted">@FormatSize(link.FileSizeBytes)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    }
 </div>
 
 @code {
     private List<TaskItem>? tasks;
+    private TaskItem? selectedTask;
+    private List<TaskDocumentLinkDto>? taskDocuments;
     private string filterStatus = "";
     private string filterPriority = "";
     private int currentUserId = 0;
@@ -185,9 +225,37 @@
         // TODO: Implement modal dialog for creating tasks
     }
 
-    private void ViewTaskDetails(int taskId)
+    private async void ViewTaskDetails(int taskId)
     {
-        // TODO: Navigate to task details or show modal
+        if (tasks == null)
+        {
+            return;
+        }
+
+        selectedTask = tasks.FirstOrDefault(t => t.TaskId == taskId);
+        if (selectedTask == null)
+        {
+            return;
+        }
+
+        taskDocuments = await DocumentService.GetTaskDocumentsAsync(currentUserId, taskId);
+        StateHasChanged();
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} B";
+        }
+
+        var kb = bytes / 1024d;
+        if (kb < 1024)
+        {
+            return $"{kb:F1} KB";
+        }
+
+        return $"{kb / 1024d:F1} MB";
     }
 
     private string GetPriorityColor(TaskPriority priority)

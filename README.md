@@ -78,6 +78,7 @@ ContosoDashboard is built using ASP.NET Core 8.0 with Blazor Server and provides
 - **Data Models**: Complete entity framework models for Users, Tasks, Projects, Notifications, and Announcements
 - **Business Services**: Service layer for all core functionality (Tasks, Projects, Users, Notifications, Dashboard)
 - **Database Context**: EF Core DbContext with relationships, indexes, and seed data
+- **Document Management (MVP+)**: Upload, list, search, metadata update, replace, soft-delete retention, sharing, task links, and activity reporting
 
 ### 🔧 Technical Stack
 
@@ -296,6 +297,10 @@ The application includes pre-seeded data for testing:
 | Project Details | `/projects/{id}` | Detailed project view | Yes (member only) |
 | Team | `/team` | View team members | Yes |
 | Notifications | `/notifications` | Manage notifications | Yes |
+| Documents | `/documents` | Upload, list, filter, and search documents | Yes |
+| Shared Documents | `/shared-documents` | Documents shared with current user | Yes |
+| Task Details | `/tasks/{id}` | Task-focused view with document upload entrypoint | Yes |
+| Document Reports | `/document-reports` | Admin activity aggregation report | Yes (Administrator) |
 | Profile | `/profile` | Edit your profile | Yes |
 | Logout | `/logout` | End session and clear cookies | Yes |
 
@@ -321,6 +326,19 @@ The application includes pre-seeded data for testing:
 - Completion percentage calculation
 - Team member visibility
 - Status badges
+
+### Document Management
+
+- Secure upload with file type/size validation (25 MB max)
+- Scanner-unavailable flow marks files as unverified with user warning
+- Visibility-scoped list and search (uploader, project members, shared users, admins)
+- Metadata update and replace operations with version conflict checks
+- Download/preview restrictions for unverified files (non-admin blocked)
+- Soft-delete workflow with 30-day retention and purge scheduling
+- Project-restricted share validation and notification fan-out
+- Task-document linking from task and document contexts
+- Dashboard document count and recent document widget
+- Admin document activity report page
 
 ### User Profile
 
@@ -364,7 +382,7 @@ sqllocaldb delete mssqllocaldb
 - Delete database: `dotnet ef database drop --force`
 - Recreate: Run application (auto-creates with seed data)
 
-**Note**: The application uses `EnsureCreated()` for development, so just running `dotnet run` will automatically create and seed the database if it doesn't exist.
+**Note**: The application applies Entity Framework migrations on startup, so running `dotnet run` will create/update the database schema automatically.
 
 ## Security Concepts and Patterns
 

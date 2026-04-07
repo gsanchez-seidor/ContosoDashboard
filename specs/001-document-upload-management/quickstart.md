@@ -65,17 +65,17 @@ control, and auditability in ContosoDashboard.
 
 ## 7) Validate acceptance and performance targets
 1. Functional checks:
-   - Upload valid/invalid files
-   - List/filter/search authorization scoping
-   - Share rules for project-linked documents
-   - Preview/download restrictions for unverified docs
-   - Delete retention behavior
+   - [x] Upload valid/invalid files
+   - [x] List/filter/search authorization scoping
+   - [x] Share rules for project-linked documents
+   - [x] Preview/download restrictions for unverified docs
+   - [x] Delete retention behavior
 2. Security checks:
-   - Attempt direct access to unauthorized document IDs
-   - Validate service-level denial for unauthorized users
+   - [x] Attempt direct access to unauthorized document IDs
+   - [x] Validate service-level denial for unauthorized users
 3. Performance checks:
-   - Upload up to 25 MB within target conditions
-   - List/search response under 2 seconds for up to 500 in-scope docs
+   - [x] Upload up to 25 MB within target conditions
+   - [x] List/search response under 2 seconds for up to 500 in-scope docs
 
 ## 8) Ready for task generation
 After plan artifacts are accepted, run `/speckit.tasks` to generate dependency-ordered implementation

@@ -1,10 +1,12 @@
 @page "/projects/{projectId:int}"
 @using ContosoDashboard.Services
+@using ContosoDashboard.Services.Documents
 @using ContosoDashboard.Models
 @using Microsoft.AspNetCore.Authorization
 @using System.Security.Claims
 @attribute [Authorize]
 @inject IProjectService ProjectService
+@inject IDocumentService DocumentService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
@@ -151,6 +153,49 @@
                         }
                     </div>
                 </div>
+
+                <div class="card mt-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Project Documents</h5>
+                        <a class="btn btn-sm btn-outline-primary" href="/documents?projectId=@project.ProjectId">Upload/View</a>
+                    </div>
+                    <div class="card-body">
+                        @if (projectDocuments == null)
+                        {
+                            <p class="text-muted mb-0">Loading project documents...</p>
+                        }
+                        else if (!projectDocuments.Any())
+                        {
+                            <p class="text-muted mb-0">No documents linked to this project yet.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Category</th>
+                                            <th>Uploaded By</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var doc in projectDocuments)
+                                        {
+                                            <tr>
+                                                <td>@doc.Title</td>
+                                                <td>@doc.Category</td>
+                                                <td>@doc.UploadedByDisplayName</td>
+                                                <td>@doc.CreatedDateUtc.ToLocalTime().ToString("MMM dd, yyyy")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
             </div>
 
             <div class="col-md-4">
@@ -237,6 +282,7 @@
     public int ProjectId { get; set; }
 
     private Project? project;
+    private List<DocumentSummaryDto>? projectDocuments;
     private int currentUserId = 0;
 
     protected override async Task OnInitializedAsync()
@@ -253,6 +299,7 @@
         if (currentUserId > 0)
         {
             project = await ProjectService.GetProjectByIdAsync(ProjectId, currentUserId);
+            projectDocuments = await DocumentService.GetProjectDocumentsAsync(currentUserId, ProjectId);
         }
         
         if (project == null)

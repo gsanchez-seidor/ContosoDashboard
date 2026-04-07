@@ -258,6 +258,17 @@ ServiceFabricBackup/
 *.ndf
 
 # Business Intelligence projects
+
+# Training runtime document uploads
+ContosoDashboard/AppData/uploads/
+
+# Environment files
+.env*
+
+# Universal OS/editor noise
+.DS_Store
+Thumbs.db
+.idea/
 *.rdl.data
 *.bim.layout
 *.bim_*.settings
